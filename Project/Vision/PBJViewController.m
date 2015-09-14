@@ -33,6 +33,11 @@
 #import <AssetsLibrary/AssetsLibrary.h>
 #import <GLKit/GLKit.h>
 
+typedef NS_ENUM(NSInteger, PBVisionScaleMode) {
+   PBVisionScaleModeNormal = 0,//正常显示大小
+   PBVisionScaleModeEnlarge = 1,//放大显示
+};
+
 @interface ExtendedHitButton : UIButton
 
 + (instancetype)extendedHitButton;
@@ -88,6 +93,7 @@
     ALAssetsLibrary *_assetLibrary;
     __block NSDictionary *_currentVideo;
     __block NSDictionary *_currentPhoto;
+    PBVisionScaleMode  _pbVisionMode ;
 }
 
 @end
@@ -202,6 +208,16 @@
     _focusTapGestureRecognizer.numberOfTapsRequired = 1;
     _focusTapGestureRecognizer.enabled = NO;
     [_previewView addGestureRecognizer:_focusTapGestureRecognizer];
+    
+    //增加双击事件，实现放大视图和缩小视图功能
+    _pbVisionMode = PBVisionScaleModeNormal;
+    UITapGestureRecognizer * doubleClickGesture =[[UITapGestureRecognizer alloc] initWithTarget:self action:@selector(doubleClickGestureRecongnizer:)];
+    doubleClickGesture.delegate = self;
+    doubleClickGesture.numberOfTapsRequired = 2;
+    doubleClickGesture.numberOfTouchesRequired = 1;
+    [_previewView addGestureRecognizer:doubleClickGesture];
+    
+    [_focusTapGestureRecognizer requireGestureRecognizerToFail:doubleClickGesture];//单击要在双击识别失败后再识别
     
     // gesture view to record
     _gestureView = [[UIView alloc] initWithFrame:CGRectZero];
@@ -451,28 +467,48 @@
     }
 }
 
+-(void) doubleClickGestureRecongnizer:(UIGestureRecognizer *) gesturerEcongnizer
+{
+   if(gesturerEcongnizer.state == UIGestureRecognizerStateEnded)
+   {
+       if(_pbVisionMode == PBVisionScaleModeNormal)
+       {
+            [PBJVision sharedInstance].videoZoomFactor = 1.5;
+           _pbVisionMode = PBVisionScaleModeEnlarge;
+       }else if(_pbVisionMode == PBVisionScaleModeEnlarge)
+       {
+          [PBJVision sharedInstance].videoZoomFactor = 1.0;
+           _pbVisionMode = PBVisionScaleModeNormal;
+       }
+   }
+}
+
 - (void)_handleFocusTapGesterRecognizer:(UIGestureRecognizer *)gestureRecognizer
 {
-    CGPoint tapPoint = [gestureRecognizer locationInView:_previewView];
-
-    // auto focus is occuring, display focus view
-    CGPoint point = tapPoint;
-    
-    CGRect focusFrame = _focusView.frame;
+    if(gestureRecognizer.state == UIGestureRecognizerStateEnded)
+    {
+        CGPoint tapPoint = [gestureRecognizer locationInView:_previewView];
+        
+        // auto focus is occuring, display focus view
+        CGPoint point = tapPoint;
+        
+        CGRect focusFrame = _focusView.frame;
 #if defined(__LP64__) && __LP64__
-    focusFrame.origin.x = rint(point.x - (focusFrame.size.width * 0.5));
-    focusFrame.origin.y = rint(point.y - (focusFrame.size.height * 0.5));
+        focusFrame.origin.x = rint(point.x - (focusFrame.size.width * 0.5));
+        focusFrame.origin.y = rint(point.y - (focusFrame.size.height * 0.5));
 #else
-    focusFrame.origin.x = rintf(point.x - (focusFrame.size.width * 0.5f));
-    focusFrame.origin.y = rintf(point.y - (focusFrame.size.height * 0.5f));
+        focusFrame.origin.x = rintf(point.x - (focusFrame.size.width * 0.5f));
+        focusFrame.origin.y = rintf(point.y - (focusFrame.size.height * 0.5f));
 #endif
-    [_focusView setFrame:focusFrame];
-    
-    [_previewView addSubview:_focusView];
-    [_focusView startAnimation];
+        [_focusView setFrame:focusFrame];
+        
+        [_previewView addSubview:_focusView];
+        [_focusView startAnimation];
+        
+        CGPoint adjustPoint = [PBJVisionUtilities convertToPointOfInterestFromViewCoordinates:tapPoint inFrame:_previewView.frame];
+        [[PBJVision sharedInstance] focusExposeAndAdjustWhiteBalanceAtAdjustedPoint:adjustPoint];
 
-    CGPoint adjustPoint = [PBJVisionUtilities convertToPointOfInterestFromViewCoordinates:tapPoint inFrame:_previewView.frame];
-    [[PBJVision sharedInstance] focusExposeAndAdjustWhiteBalanceAtAdjustedPoint:adjustPoint];
+    }
 }
 
 #pragma mark - PBJVisionDelegate

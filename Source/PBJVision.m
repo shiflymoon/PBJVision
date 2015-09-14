@@ -167,6 +167,8 @@ typedef NS_ENUM(GLint, PBJVisionUniformLocationTypes)
     
     CIContext *_ciContext;
     
+    CGFloat _videoZoomFactor;
+    
     // flags
     
     struct {
@@ -215,6 +217,7 @@ typedef NS_ENUM(GLint, PBJVisionUniformLocationTypes)
 @synthesize additionalCompressionProperties = _additionalCompressionProperties;
 @synthesize additionalVideoProperties = _additionalVideoProperties;
 @synthesize maximumCaptureDuration = _maximumCaptureDuration;
+@synthesize videoZoomFactor = _videoZoomFactor;
 
 #pragma mark - singleton
 
@@ -230,6 +233,17 @@ typedef NS_ENUM(GLint, PBJVisionUniformLocationTypes)
 
 #pragma mark - getters/setters
 
+-(void) setVideoZoomFactor:(CGFloat)videoZoomFactor
+{
+    _videoZoomFactor = videoZoomFactor;
+    NSError * error = nil;
+    [_currentDevice lockForConfiguration:&error];
+    if(!error)
+    {
+         _currentDevice.videoZoomFactor = videoZoomFactor;
+    }
+    [_currentDevice unlockForConfiguration];
+}
 - (BOOL)isVideoWritten
 {
     return _flags.videoWritten;

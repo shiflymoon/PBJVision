@@ -166,6 +166,26 @@ static CGFloat const PBJVideoBitRate1280x750 = 5000000 * 8;
 @property (nonatomic, copy) NSString *captureDirectory;
 @property (nonatomic) PBJOutputFormat outputFormat;
 
+/*!
+ @property videoZoomFactor
+ @abstract
+ Controls zoom level of image outputs
+ 
+ @discussion
+ Applies a centered crop for all image outputs, scaling as necessary to maintain output
+ dimensions.  Minimum value of 1.0 yields full field of view, increasing values will increase
+ magnification, up to a maximum value specified in the activeFormat's videoMaxZoomFactor property.
+ Modifying the zoom factor will cancel any active rampToVideoZoomFactor:withRate:, and snap
+ directly to the assigned value.  Assigning values outside the acceptable range will generate
+ an NSRangeException.  Clients can key value observe the value of this property.
+ 
+ -setVideoZoomFactor: throws an NSGenericException if called without first obtaining exclusive
+ access to the receiver using lockForConfiguration:.
+ 
+ @seealso AVCaptureDeviceFormat AVCaptureDeviceFormat - videoMaxZoomFactor and videoZoomFactorUpscaleThreshold
+ */
+@property (nonatomic,assign) CGFloat videoZoomFactor;
+
 // video compression settings
 
 @property (nonatomic) CGFloat videoBitRate;
