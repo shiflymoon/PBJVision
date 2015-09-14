@@ -335,6 +335,7 @@
     //vision.cameraMode = PBJCameraModePhoto; // PHOTO: uncomment to test photo capture
     vision.cameraOrientation = PBJCameraOrientationPortrait;
     vision.focusMode = PBJFocusModeContinuousAutoFocus;
+    vision.captureSessionPreset = AVCaptureSessionPresetHigh;//将视频质量调整为高质量
     vision.outputFormat = PBJOutputFormatSquare;
     vision.videoRenderingEnabled = YES;
     vision.additionalCompressionProperties = @{AVVideoProfileLevelKey : AVVideoProfileLevelH264Baseline30}; // AVVideoProfileLevelKey requires specific captureSessionPreset
