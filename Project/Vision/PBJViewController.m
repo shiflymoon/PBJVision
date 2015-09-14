@@ -149,6 +149,17 @@
     _previewLayer.videoGravity = AVLayerVideoGravityResizeAspectFill;
     [_previewView.layer addSublayer:_previewLayer];
     
+    
+    //增加mask层
+    UIImage * mastImage = [UIImage imageNamed:@"ms_air_bubbles_left_n.png"];
+    CALayer* mastlayer = [CALayer layer] ;
+    mastlayer.frame = _previewLayer.frame;
+    mastlayer.contentsScale = [[UIScreen mainScreen] scale];
+    mastlayer.contentsGravity = kCAGravityResize;
+    mastlayer.contents = (id)mastImage.CGImage;
+    mastlayer.contentsCenter = CGRectMake(18/2/mastImage.size.width, 40/2/mastImage.size.height, 1/18*2, 1/40*2);
+    _previewLayer.mask = mastlayer;
+    
     // onion skin
     _effectsViewController = [[GLKViewController alloc] init];
     _effectsViewController.preferredFramesPerSecond = 60;
