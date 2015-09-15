@@ -359,16 +359,17 @@ typedef NS_ENUM(NSInteger, PBVisionScaleMode) {
     }
     
     vision.cameraMode = PBJCameraModeVideo;
+    vision.videoBitRate = PBJVideoBitRate480x360;
     //vision.cameraMode = PBJCameraModePhoto; // PHOTO: uncomment to test photo capture
     vision.cameraOrientation = PBJCameraOrientationPortrait;
     vision.focusMode = PBJFocusModeContinuousAutoFocus;
     vision.captureSessionPreset = AVCaptureSessionPresetHigh;//将视频质量调整为高质量
-    vision.outputFormat = PBJOutputFormatSquare;
+    vision.outputFormat = PBJOutputFormatStandard;
     vision.videoRenderingEnabled = YES;
-    vision.additionalCompressionProperties = @{AVVideoProfileLevelKey : AVVideoProfileLevelH264Baseline30}; // AVVideoProfileLevelKey requires specific captureSessionPreset
+    vision.additionalCompressionProperties = @{AVVideoProfileLevelKey : AVVideoProfileLevelH264High41}; // AVVideoProfileLevelKey requires specific captureSessionPreset
     
     // specify a maximum duration with the following property
-    // vision.maximumCaptureDuration = CMTimeMakeWithSeconds(5, 600); // ~ 5 seconds
+    vision.maximumCaptureDuration = CMTimeMakeWithSeconds(5, 500); // ~ 5 seconds
 }
 
 #pragma mark - UIButton
@@ -469,15 +470,35 @@ typedef NS_ENUM(NSInteger, PBVisionScaleMode) {
 
 -(void) doubleClickGestureRecongnizer:(UIGestureRecognizer *) gesturerEcongnizer
 {
+  //最好通过定时器来实现放大缩小，不要去通过线程休眠主线程，这个地方只是为了快速实现效果
    if(gesturerEcongnizer.state == UIGestureRecognizerStateEnded)
    {
        if(_pbVisionMode == PBVisionScaleModeNormal)
        {
-            [PBJVision sharedInstance].videoZoomFactor = 1.5;
+           CGFloat current = 1.0;
+           for(int i =0;i<10;i++)
+           {
+               current += 0.05;
+              [PBJVision sharedInstance].videoZoomFactor =current;
+               [NSThread sleepForTimeInterval:0.01];
+           }
+           
            _pbVisionMode = PBVisionScaleModeEnlarge;
        }else if(_pbVisionMode == PBVisionScaleModeEnlarge)
        {
-          [PBJVision sharedInstance].videoZoomFactor = 1.0;
+           CGFloat current = 1.5;
+           current -= 0.05;
+           for(int i =0;i<10;i++)
+           {
+               current -=0.05;
+               if(current <=1.0)
+               {
+                   current = 1.0;
+               }
+                [PBJVision sharedInstance].videoZoomFactor = current;
+               [NSThread sleepForTimeInterval:0.01];
+           }
+         
            _pbVisionMode = PBVisionScaleModeNormal;
        }
    }
